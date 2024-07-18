@@ -13,8 +13,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id Int @unique @id
+model User { 
+  id Int @id @default(autoincrement())
+  telegramId String @unique
   username String
   point Int
   registered DateTime

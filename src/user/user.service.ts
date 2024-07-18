@@ -1,6 +1,5 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { ERROR_TELEGRAM_ID_ALREADY_EXIST } from 'src/common/constant/error';
+import { Prisma, User } from '@prisma/client';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -10,23 +9,32 @@ export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createUser(data: Prisma.UserCreateInput) {
-    if (this.checkUserExist(data.id)) {
-      throw new BadRequestException(ERROR_TELEGRAM_ID_ALREADY_EXIST);
+    const userExist = await this.checkUserExist(data.telegramId);
+    if (userExist) {
+      this.logger.log('User already exists with id: ', data.telegramId);
+      return false;
     }
-
     const user = await this.prismaService.user.create({
       data,
     });
 
-    this.logger.log(`User created successfully: ${user}`);
+    this.logger.log(`User created successfully: ${JSON.stringify(user)}`);
+
     return true;
   }
 
-  async checkUserExist(telegramId: number): Promise<boolean> {
+  async getUserById(telegramId: string): Promise<User> {
     const user = await this.prismaService.user.findFirst({
-      where: { id: telegramId },
+      where: { telegramId: telegramId },
     });
-    if (!user) return false;
+    return user;
+  }
+
+  async checkUserExist(telegramId: string): Promise<boolean> {
+    const user = await this.getUserById(telegramId);
+    if (!user) {
+      return false;
+    }
     return true;
   }
 }

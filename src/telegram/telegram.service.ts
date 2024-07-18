@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { Bot } from 'grammy';
+import { Bot, Context, InlineKeyboard, Keyboard } from 'grammy';
 import { UserService } from 'src/user/user.service';
+import { getMonthDifference, getRandomDate } from 'src/utils/time';
 
 @Injectable()
 export class TelegramService {
@@ -17,20 +18,36 @@ export class TelegramService {
   ) {
     this.bot = new Bot(this.tokenBot);
 
-    this.bot.command('start', (ctx) => {
-      ctx.reply('Welcome! This is a start command.');
+    this.bot.command('start', async (ctx) => {
+      const args = ctx.match;
+      console.log('args: ' + args);
+
+      ctx.reply('Welcome! This is a start command.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Open Mini App',
+                web_app: {
+                  url: 'https://hopefully-loved-cougar.ngrok-free.app',
+                },
+              },
+            ],
+          ],
+        },
+      });
+
       const id = ctx.from.id;
       const username = ctx.from.username;
-      this.handleUserStart(id, username);
+      await this.handleUserStart(id, username);
     });
 
     this.bot.command('help', (ctx) => {
       ctx.reply('This is the help command.');
     });
 
-    this.bot.command('echo', (ctx) => {
-      const message = ctx.message.text.split(' ').slice(1).join(' ');
-      ctx.reply(message);
+    this.bot.command('quac', (ctx) => {
+      ctx.reply('Quác quác quác quác quác quác.');
     });
 
     this.bot.on('message', (ctx) => {
@@ -56,8 +73,10 @@ export class TelegramService {
     return message;
   }
 
-  async calculationPoint(time: number): Promise<number> {
-    return 2000;
+  async calculationPoint(time: Date): Promise<number> {
+    const currentDate = new Date();
+    const monthsDifference = getMonthDifference(time, currentDate);
+    return monthsDifference * 10;
   }
 
   async handleUserStart(
@@ -65,15 +84,20 @@ export class TelegramService {
     username: string,
     time?: string,
   ): Promise<boolean> {
-    const point = await this.calculationPoint(2000);
+    const startDate = new Date(2010, 0, 1);
+    const endDate = new Date(2023, 11, 31);
+
+    const randomDate = getRandomDate(startDate, endDate);
+    const point = await this.calculationPoint(randomDate);
+
     const data: Prisma.UserCreateInput = {
-      id: id,
+      telegramId: id.toString(),
       username: username,
       point: point,
-      registered: time,
-      created: Date.now().toString(),
+      registered: randomDate,
+      created: new Date(),
     };
-    this.userService.createUser(data);
+    await this.userService.createUser(data);
 
     return true;
   }
