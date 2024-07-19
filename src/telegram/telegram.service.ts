@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { Bot, Context, InlineKeyboard, Keyboard } from 'grammy';
+import { Bot } from 'grammy';
+import { ReferralService } from 'src/referral/referral.service';
 import { UserService } from 'src/user/user.service';
 import { getMonthDifference, getRandomDate } from 'src/utils/time';
 
@@ -10,17 +11,21 @@ export class TelegramService {
   private bot: Bot;
   private tokenBot = this.configService.get<string>('BOT_TOKEN');
   private groupId: string;
-  private creationDateBotUsername = '@creationdatebot';
+  private readonly logger = new Logger(ReferralService.name);
 
   constructor(
     private configService: ConfigService,
     private userService: UserService,
+    private referralService: ReferralService,
   ) {
     this.bot = new Bot(this.tokenBot);
 
     this.bot.command('start', async (ctx) => {
       const args = ctx.match;
-      console.log('args: ' + args);
+      const id = ctx.from.id;
+      const username = ctx.from.username;
+
+      await this.handleActivateReferral(args, id, username);
 
       ctx.reply('Welcome! This is a start command.', {
         reply_markup: {
@@ -36,10 +41,6 @@ export class TelegramService {
           ],
         },
       });
-
-      const id = ctx.from.id;
-      const username = ctx.from.username;
-      await this.handleUserStart(id, username);
     });
 
     this.bot.command('help', (ctx) => {
@@ -51,6 +52,7 @@ export class TelegramService {
     });
 
     this.bot.on('message', (ctx) => {
+      console.log('ctx: ' + ctx);
       console.log('Received message:', ctx.message);
     });
   }
@@ -79,11 +81,28 @@ export class TelegramService {
     return monthsDifference * 10;
   }
 
-  async handleUserStart(
-    id: number,
+  async handleActivateReferral(
+    inviterId: string,
+    inviteeId: number,
     username: string,
-    time?: string,
-  ): Promise<boolean> {
+  ) {
+    const inviterExist = await this.userService.checkUserExist(
+      inviterId.toString(),
+    );
+
+    if (!inviterId || !inviterExist) {
+      await this.handleUserStart(Number(inviteeId), username);
+      return;
+    }
+
+    await this.handleUserStart(inviteeId, username);
+    if (Number(inviterId) === inviteeId) {
+      return;
+    }
+    await this.handleCreateReferral(Number(inviterId), inviteeId);
+  }
+
+  async handleUserStart(id: number, username: string, time?: string) {
     const startDate = new Date(2010, 0, 1);
     const endDate = new Date(2023, 11, 31);
 
@@ -95,10 +114,33 @@ export class TelegramService {
       username: username,
       point: point,
       registered: randomDate,
-      created: new Date(),
+      createAt: new Date(),
     };
-    await this.userService.createUser(data);
+    const newUser = await this.userService.createUser(data);
 
+    return newUser
+      ? this.logger.log(`User created successfully: ${JSON.stringify(newUser)}`)
+      : this.logger.log(
+          `User already exists with telegram id: ${data.telegramId} `,
+        );
+  }
+
+  async handleCreateReferral(
+    inviterId: number,
+    inviteeId: number,
+  ): Promise<boolean> {
+    const inviter = await this.userService.getUserById(inviterId.toString());
+    const invitee = await this.userService.getUserById(inviteeId.toString());
+    const data: Prisma.ReferalCreateInput = {
+      inviter: { connect: { id: inviter.id } },
+      invitee: { connect: { id: invitee.id } },
+      scoreEarned: (invitee.point * 100) / 1000,
+      createAt: new Date(),
+    };
+    const referral = await this.referralService.createReferral(data);
+    this.logger.log(
+      `Inviter ${referral.inviterId} referral user ${referral.inviteeId} successfully `,
+    );
     return true;
   }
 }

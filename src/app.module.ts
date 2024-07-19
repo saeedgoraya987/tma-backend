@@ -7,6 +7,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpInterceptor } from './common/http.interceptor';
+import { ReferralModule } from './referral/referral.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HttpInterceptor } from './common/http.interceptor';
     HttpModule.registerAsync({
       useClass: HttpConfigService,
     }),
+    ReferralModule,
   ],
   controllers: [],
   providers: [{ provide: APP_INTERCEPTOR, useClass: HttpInterceptor }],

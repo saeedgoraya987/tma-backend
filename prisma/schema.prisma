@@ -19,21 +19,32 @@ model User {
   username String
   point Int
   registered DateTime
-  rank Int?
 
   invitationsSent   Referal[] @relation("InvitationsSent")
   invitationsReceived Referal[] @relation("InvitationsReceived")
-  created DateTime
+  ranking Rank?
+  createAt DateTime
 }
 
 
 model Referal {
-  id Int @unique @id
-  scoreEarned Int?
+  id Int @id @default(autoincrement())
+  scoreEarned Int @default(0)
   inviterId    Int
-  inviteeId    Int
+  inviteeId    Int @unique
   inviter      User   @relation("InvitationsSent", fields: [inviterId], references: [id])
   invitee      User   @relation("InvitationsReceived", fields: [inviteeId], references: [id])
 
+  createAt DateTime
+}
+
+model Rank {
+  id Int @id @default(autoincrement())
+  ranking Int @default(0)  
+  totalScoreEarned Int @default(0)
+  numFriends Int @default(0)
+  
+  inviterId    Int @unique
+  user User @relation(fields: [inviterId], references: [id])
   createAt DateTime
 }
