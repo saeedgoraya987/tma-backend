@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, Referal } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RankingService } from 'src/ranking/ranking.service';
 import { UserService } from 'src/user/user.service';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class ReferralService {
   constructor(
     private prismaService: PrismaService,
     private userService: UserService,
+    private rankingService: RankingService,
   ) {}
 
   async getReferralsByInviter(inviter: number): Promise<Referal[]> {
@@ -29,6 +31,8 @@ export class ReferralService {
 
   async createReferral(data: Prisma.ReferalCreateInput) {
     const referral = await this.prismaService.referal.create({ data: data });
+    // await this.rankingService.updateRankingForUser(referral.inviterId);
+    await this.rankingService.updateRankingForAllUsers();
     return referral;
   }
 }

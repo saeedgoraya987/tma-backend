@@ -1,12 +1,16 @@
-import { Prisma, Rank, User } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RankingService } from 'src/ranking/ranking.service';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private rankingService: RankingService,
+  ) {}
 
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     const userExist = await this.checkUserExist(data.telegramId);
@@ -22,7 +26,7 @@ export class UserService {
       createAt: new Date(),
     };
 
-    await this.createRanking(dataRank);
+    await this.rankingService.createRanking(dataRank);
 
     return user;
   }
@@ -40,13 +44,5 @@ export class UserService {
       return false;
     }
     return true;
-  }
-
-  async createRanking(data: Prisma.RankCreateInput): Promise<Rank> {
-    const rank = await this.prismaService.rank.create({
-      data,
-    });
-
-    return rank;
   }
 }

@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpInterceptor } from './common/http.interceptor';
 import { ReferralModule } from './referral/referral.module';
+import { RankingModule } from './ranking/ranking.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ReferralModule } from './referral/referral.module';
       useClass: HttpConfigService,
     }),
     ReferralModule,
+    RankingModule,
   ],
   controllers: [],
   providers: [{ provide: APP_INTERCEPTOR, useClass: HttpInterceptor }],

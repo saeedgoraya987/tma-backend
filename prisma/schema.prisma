@@ -19,7 +19,6 @@ model User {
   username String
   point Int
   registered DateTime
-
   invitationsSent   Referal[] @relation("InvitationsSent")
   invitationsReceived Referal[] @relation("InvitationsReceived")
   ranking Rank?
@@ -27,14 +26,14 @@ model User {
 }
 
 
+
 model Referal {
   id Int @id @default(autoincrement())
   scoreEarned Int @default(0)
-  inviterId    Int
-  inviteeId    Int @unique
-  inviter      User   @relation("InvitationsSent", fields: [inviterId], references: [id])
-  invitee      User   @relation("InvitationsReceived", fields: [inviteeId], references: [id])
-
+  inviterId Int
+  inviteeId Int @unique
+  inviter User @relation("InvitationsSent", fields: [inviterId], references: [id])
+  invitee User @relation("InvitationsReceived", fields: [inviteeId], references: [id])
   createAt DateTime
 }
 
@@ -43,8 +42,7 @@ model Rank {
   ranking Int @default(0)  
   totalScoreEarned Int @default(0)
   numFriends Int @default(0)
-  
-  inviterId    Int @unique
+  inviterId Int @unique
   user User @relation(fields: [inviterId], references: [id])
   createAt DateTime
 }
