@@ -25,7 +25,21 @@ export class TelegramService {
       const id = ctx.from.id;
       const username = ctx.from.username;
 
-      await this.handleActivateReferral(args, id, username);
+      const userProfilePhotos = await ctx.api.getUserProfilePhotos(id);
+      let filePath: string;
+      if (userProfilePhotos && userProfilePhotos.photos.length > 0) {
+        const avatar = userProfilePhotos.photos[0][0].file_id;
+
+        const fileResponse = await ctx.api.getFile(avatar);
+        filePath = fileResponse.file_path;
+        console.log('File: ' + filePath);
+        const photo = `https://api.telegram.org/file/bot${this.bot.token}/${filePath}`;
+        console.log('Photo URL: ', photo);
+      } else {
+        console.log('No profile photo available.');
+      }
+
+      await this.handleActivateReferral(args, id, username, filePath);
 
       ctx.reply('Welcome! This is a start command.', {
         reply_markup: {
@@ -52,7 +66,6 @@ export class TelegramService {
     });
 
     this.bot.on('message', (ctx) => {
-      console.log('ctx: ' + ctx);
       console.log('Received message:', ctx.message);
     });
   }
@@ -85,24 +98,27 @@ export class TelegramService {
     inviterId: string,
     inviteeId: number,
     username: string,
+    avatar?: string,
   ) {
     const inviterExist = await this.userService.checkUserExist(
       inviterId.toString(),
     );
 
     if (!inviterId || !inviterExist) {
-      await this.handleUserStart(Number(inviteeId), username);
+      await this.handleUserStart(Number(inviteeId), username, avatar);
       return;
     }
 
-    await this.handleUserStart(inviteeId, username);
+    await this.handleUserStart(inviteeId, username, avatar);
+
     if (Number(inviterId) === inviteeId) {
       return;
     }
+
     await this.handleCreateReferral(Number(inviterId), inviteeId);
   }
 
-  async handleUserStart(id: number, username: string, time?: string) {
+  async handleUserStart(id: number, username: string, avatar?: string) {
     const startDate = new Date(2010, 0, 1);
     const endDate = new Date(2023, 11, 31);
 
@@ -112,6 +128,7 @@ export class TelegramService {
     const data: Prisma.UserCreateInput = {
       telegramId: id.toString(),
       username: username,
+      avatarUrl: avatar,
       point: point,
       registered: randomDate,
       createAt: new Date(),
@@ -131,6 +148,13 @@ export class TelegramService {
   ): Promise<boolean> {
     const inviter = await this.userService.getUserById(inviterId.toString());
     const invitee = await this.userService.getUserById(inviteeId.toString());
+
+    const referralExist = await this.referralService.getReferralByInvitee(
+      invitee.id,
+    );
+    if (referralExist) {
+      return false;
+    }
     const data: Prisma.ReferalCreateInput = {
       inviter: { connect: { id: inviter.id } },
       invitee: { connect: { id: invitee.id } },

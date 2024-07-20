@@ -31,7 +31,6 @@ export class ReferralService {
 
   async createReferral(data: Prisma.ReferalCreateInput) {
     const referral = await this.prismaService.referal.create({ data: data });
-    // await this.rankingService.updateRankingForUser(referral.inviterId);
     await this.rankingService.updateRankingForAllUsers();
     return referral;
   }

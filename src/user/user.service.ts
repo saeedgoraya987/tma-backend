@@ -20,6 +20,7 @@ export class UserService {
     const user = await this.prismaService.user.create({
       data,
     });
+
     const dataRank: Prisma.RankCreateInput = {
       user: { connect: { id: user.id } },
       totalScoreEarned: user.point,
@@ -35,7 +36,8 @@ export class UserService {
     const user = await this.prismaService.user.findFirst({
       where: { telegramId: telegramId },
     });
-    return user;
+
+    return user ? user : null;
   }
 
   async checkUserExist(telegramId: string): Promise<boolean> {
@@ -44,5 +46,12 @@ export class UserService {
       return false;
     }
     return true;
+  }
+
+  async getUsersSortByRanking(): Promise<User[]> {
+    const users = await this.prismaService.user.findMany({
+      orderBy: { ranking: { ranking: 'desc' } },
+    });
+    return users;
   }
 }
