@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RankingService } from 'src/ranking/ranking.service';
+import { transformUserDto } from './dto/users-mapping';
+import { UserResponseDto } from './dto/users-response.dto';
 
 @Injectable()
 export class UserService {
@@ -32,12 +34,16 @@ export class UserService {
     return user;
   }
 
-  async getUserById(telegramId: string): Promise<User> {
+  async getUserById(telegramId: string): Promise<UserResponseDto> {
     const user = await this.prismaService.user.findFirst({
       where: { telegramId: telegramId },
+      include: { ranking: true },
     });
+    if (!user) {
+      return null;
+    }
 
-    return user ? user : null;
+    return transformUserDto(user as User, user.ranking.totalScoreEarned);
   }
 
   async checkUserExist(telegramId: string): Promise<boolean> {
