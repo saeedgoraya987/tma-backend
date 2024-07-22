@@ -32,9 +32,6 @@ export class TelegramService {
 
         const fileResponse = await ctx.api.getFile(avatar);
         filePath = fileResponse.file_path;
-        console.log('File: ' + filePath);
-        const photo = `https://api.telegram.org/file/bot${this.bot.token}/${filePath}`;
-        console.log('Photo URL: ', photo);
       } else {
         console.log('No profile photo available.');
       }
@@ -149,12 +146,11 @@ export class TelegramService {
     const inviter = await this.userService.getUserById(inviterId.toString());
     const invitee = await this.userService.getUserById(inviteeId.toString());
 
-    const referralExist = await this.referralService.getReferralByInvitee(
-      invitee.id,
-    );
-    if (referralExist) {
+    if (!inviter || !invitee) {
+      this.logger.error(`Inviter or Invitee not found`);
       return false;
     }
+
     const data: Prisma.ReferalCreateInput = {
       inviter: { connect: { id: inviter.id } },
       invitee: { connect: { id: invitee.id } },

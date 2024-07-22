@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, Rank } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { transformRankingDto } from './dto/ranking-mapping.dto';
+import { transformRankingDto } from './dto/ranking-mapping';
 import { RankingResponseDto } from './dto/ranking-reponse.dto';
+import { TotalRankingDto } from './dto/total-ranking.dto';
 
 @Injectable()
 export class RankingService {
@@ -88,11 +89,22 @@ export class RankingService {
   async getRankings(): Promise<RankingResponseDto[]> {
     const rankings = await this.prismaService.rank.findMany({
       include: { user: true },
+      orderBy: { totalScoreEarned: 'desc' },
+      take: 100,
     });
+
     if (!rankings) {
       return null;
     }
     return rankings.map((item) => transformRankingDto(item, item.user));
+  }
+
+  async getRanks(): Promise<TotalRankingDto> {
+    const dto = new TotalRankingDto();
+    const totalHolder = await this.prismaService.rank.count();
+    dto.totalHolder = totalHolder;
+    dto.ranks = await this.getRankings();
+    return dto;
   }
 
   async getRankingByTelegramId(

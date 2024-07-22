@@ -6,7 +6,7 @@ export class RankingController {
   constructor(private rankingService: RankingService) {}
   @Get()
   async getRanking() {
-    return await this.rankingService.getRankings();
+    return await this.rankingService.getRanks();
   }
 
   @Get('/id/:id')

@@ -3,6 +3,8 @@ import { Prisma, Referal } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RankingService } from 'src/ranking/ranking.service';
 import { UserService } from 'src/user/user.service';
+import { transformReferral } from './dto/referral-mapping';
+import { ReferralDto } from './dto/referral.dto';
 
 @Injectable()
 export class ReferralService {
@@ -14,12 +16,15 @@ export class ReferralService {
     private rankingService: RankingService,
   ) {}
 
-  async getReferralsByInviter(inviter: number): Promise<Referal[]> {
+  async getReferralsByInviter(inviterTelegram: string): Promise<ReferralDto[]> {
     const referrals = await this.prismaService.referal.findMany({
-      where: { inviterId: inviter },
+      where: { inviter: { telegramId: inviterTelegram } },
+      include: { invitee: true },
     });
 
-    return referrals;
+    return referrals.map((referral) =>
+      transformReferral(referral.scoreEarned, referral.invitee),
+    );
   }
 
   async getReferralByInvitee(inviteeId: number): Promise<Referal> {
@@ -30,6 +35,8 @@ export class ReferralService {
   }
 
   async createReferral(data: Prisma.ReferalCreateInput) {
+    console.log('data: ', data);
+
     const referral = await this.prismaService.referal.create({ data: data });
     await this.rankingService.updateRankingForAllUsers();
     return referral;

@@ -6,6 +6,7 @@ export const transformUserDto = (
   totalPoint: number,
 ): UserResponseDto => {
   const dto = new UserResponseDto();
+  dto.id = user.id;
   dto.telegramId = user.telegramId.toString();
   dto.username = user.username;
   dto.avatarPath = user.avatarUrl ?? '';
