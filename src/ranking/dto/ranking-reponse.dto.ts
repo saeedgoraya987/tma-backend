@@ -15,4 +15,7 @@ export class RankingResponseDto {
 
   @Expose()
   avatarPath: string;
+
+  @Expose()
+  createdAt: Date;
 }

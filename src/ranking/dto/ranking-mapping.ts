@@ -12,5 +12,6 @@ export const transformRankingDto = (
   dto.avatarPath = userRank.avatarUrl;
   dto.ranking = rank.ranking;
   dto.totalScore = rank.totalScoreEarned.toString();
+  dto.createdAt = userRank.createAt;
   return dto;
 };

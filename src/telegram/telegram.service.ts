@@ -23,9 +23,17 @@ export class TelegramService {
     this.bot.command('start', async (ctx) => {
       const args = ctx.match;
       const id = ctx.from.id;
-      const username = ctx.from.username;
+      const username = ctx.from?.username;
+
+      if (!username) {
+        await ctx.reply(
+          'Please set a username to start the app and rewrite command start.',
+        );
+        return;
+      }
 
       const userProfilePhotos = await ctx.api.getUserProfilePhotos(id);
+
       let filePath: string;
       if (userProfilePhotos && userProfilePhotos.photos.length > 0) {
         const avatar = userProfilePhotos.photos[0][0].file_id;
@@ -45,7 +53,7 @@ export class TelegramService {
               {
                 text: 'Open Mini App',
                 web_app: {
-                  url: 'https://hopefully-loved-cougar.ngrok-free.app',
+                  url: 'https://ducktma.netlify.app/',
                 },
               },
             ],
@@ -149,6 +157,15 @@ export class TelegramService {
     if (!inviter || !invitee) {
       this.logger.error(`Inviter or Invitee not found`);
       return false;
+    }
+
+    const inviteeExist = await this.referralService.getReferralByInvitee(
+      invitee.id,
+    );
+
+    if (inviteeExist) {
+      this.logger.warn(`Referral already exists: ${invitee.username}`);
+      return;
     }
 
     const data: Prisma.ReferalCreateInput = {
