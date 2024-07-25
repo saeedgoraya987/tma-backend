@@ -5,6 +5,7 @@ import { RankingService } from 'src/ranking/ranking.service';
 import { transformUserDto } from './dto/users-mapping';
 import { UserResponseDto } from './dto/users-response.dto';
 import { updateWalletDto } from './dto/update-wallet.dto';
+import { convertHexToNonBounceable } from 'src/utils/address';
 
 @Injectable()
 export class UserService {
@@ -62,8 +63,9 @@ export class UserService {
     return users;
   }
 
-  async updateWallet(requestDto: updateWalletDto): Promise<boolean> {
+  async updateWallet(requestDto: updateWalletDto): Promise<UserResponseDto> {
     const { telegramId, wallet } = requestDto;
+    const address = convertHexToNonBounceable(wallet);
 
     const user = await this.getUserById(telegramId);
 
@@ -78,7 +80,7 @@ export class UserService {
     await this.prismaService.user.update({
       where: { id: user.id },
       data: {
-        wallet: wallet,
+        wallet: address,
         rewardWallet: newRewardWallet,
       },
     });
@@ -86,6 +88,8 @@ export class UserService {
     await this.rankingService.updateRankingForAllUsers();
 
     this.logger.log(`User ${user.id} updated wallet successfully`);
-    return true;
+
+    const userResponse = await this.getUserById(telegramId);
+    return userResponse;
   }
 }

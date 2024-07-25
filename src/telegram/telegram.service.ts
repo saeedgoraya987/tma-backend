@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { Bot } from 'grammy';
 import { ReferralService } from 'src/referral/referral.service';
 import { UserService } from 'src/user/user.service';
+import { convertHexToNonBounceable } from 'src/utils/address';
 import { getMonthDifference, getRandomDate } from 'src/utils/time';
 
 @Injectable()
@@ -179,5 +180,9 @@ export class TelegramService {
       `Inviter ${referral.inviterId} referral user ${referral.inviteeId} successfully `,
     );
     return true;
+  }
+
+  convertToNonBounceable(hex: string): string {
+    return convertHexToNonBounceable(hex);
   }
 }
