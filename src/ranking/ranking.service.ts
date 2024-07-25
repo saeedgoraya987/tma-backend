@@ -138,14 +138,12 @@ export class RankingService {
   async updateScore(userId: number, score: number) {
     const currentScore = await this.getCurrentScoreByUserId(userId);
 
-    const currentRanking = await this.prismaService.rank.update({
+    await this.prismaService.rank.update({
       where: { inviterId: userId },
       data: {
         totalScoreEarned: currentScore + score,
       },
     });
-    console.log(currentScore);
-    console.log(currentRanking.totalScoreEarned);
 
     this.logger.log(`User ${userId} update point successfully`);
   }

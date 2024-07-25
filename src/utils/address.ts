@@ -1,7 +1,6 @@
 import { Address } from '@ton/core';
 
 export const convertHexToNonBounceable = (hex: string) => {
-  console.log('hex: ', hex);
   const workchain = parseInt(hex.slice(0, 2), 16);
   const publicKey = hex.slice(2);
 
