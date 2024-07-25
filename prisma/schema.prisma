@@ -18,6 +18,8 @@ model User {
   telegramId String @unique
   username String
   avatarUrl String?
+  wallet String?
+  rewardWallet Int @default(0)
   point Int
   registered DateTime
   invitationsSent   Referal[] @relation("InvitationsSent")

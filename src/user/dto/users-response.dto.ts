@@ -21,4 +21,7 @@ export class UserResponseDto {
 
   @Expose()
   friendPoint: number;
+
+  @Expose()
+  rewardWallet: number;
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma, Rank } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { transformRankingDto } from './dto/ranking-mapping';
@@ -54,6 +54,7 @@ export class RankingService {
 
     for (const user of users) {
       const totalScoreEarned =
+        user.rewardWallet +
         user.point +
         user.invitationsSent.reduce(
           (total, referral) => total + referral.scoreEarned,
@@ -120,7 +121,32 @@ export class RankingService {
         user: true,
       },
     });
-
+    if (!ranking) {
+      throw new BadRequestException(`Telegram id ${telegramId} not found`);
+    }
     return transformRankingDto(ranking as Rank, ranking.user);
+  }
+
+  async getCurrentScoreByUserId(userId: number): Promise<number> {
+    const score = await this.prismaService.rank.findFirst({
+      select: { totalScoreEarned: true },
+      where: { inviterId: userId },
+    });
+    return score.totalScoreEarned;
+  }
+
+  async updateScore(userId: number, score: number) {
+    const currentScore = await this.getCurrentScoreByUserId(userId);
+
+    const currentRanking = await this.prismaService.rank.update({
+      where: { inviterId: userId },
+      data: {
+        totalScoreEarned: currentScore + score,
+      },
+    });
+    console.log(currentScore);
+    console.log(currentRanking.totalScoreEarned);
+
+    this.logger.log(`User ${userId} update point successfully`);
   }
 }

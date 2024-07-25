@@ -13,5 +13,6 @@ export const transformUserDto = (
   dto.point = user.point;
   dto.friendPoint = (totalPoint ?? 0) - user.point;
   dto.registeredDate = user.registered;
+  dto.rewardWallet = user.rewardWallet;
   return dto;
 };

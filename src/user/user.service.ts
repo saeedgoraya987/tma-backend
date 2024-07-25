@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RankingService } from 'src/ranking/ranking.service';
 import { transformUserDto } from './dto/users-mapping';
 import { UserResponseDto } from './dto/users-response.dto';
+import { updateWalletDto } from './dto/update-wallet.dto';
 
 @Injectable()
 export class UserService {
@@ -59,5 +60,32 @@ export class UserService {
       orderBy: { ranking: { ranking: 'desc' } },
     });
     return users;
+  }
+
+  async updateWallet(requestDto: updateWalletDto): Promise<boolean> {
+    const { telegramId, wallet } = requestDto;
+
+    const user = await this.getUserById(telegramId);
+
+    if (!user)
+      throw new BadRequestException(
+        `User have telegram id ${telegramId} not exist`,
+      );
+    const scoreReward = 1000;
+    const newRewardWallet =
+      user.rewardWallet === 0 ? scoreReward : user.rewardWallet;
+
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: {
+        wallet: wallet,
+        rewardWallet: newRewardWallet,
+      },
+    });
+
+    await this.rankingService.updateRankingForAllUsers();
+
+    this.logger.log(`User ${user.id} updated wallet successfully`);
+    return true;
   }
 }

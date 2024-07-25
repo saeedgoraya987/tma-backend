@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `user` ADD COLUMN `rewardWallet` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `wallet` VARCHAR(191) NULL;
