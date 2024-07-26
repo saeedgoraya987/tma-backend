@@ -11,8 +11,9 @@ export const transformUserDto = (
   dto.username = user.username;
   dto.avatarPath = user.avatarUrl ?? '';
   dto.point = user.point;
-  dto.friendPoint = (totalPoint ?? 0) - user.point;
+  dto.friendPoint = (totalPoint ?? 0) - user.point - user.rewardWallet;
   dto.registeredDate = user.registered;
   dto.rewardWallet = user.rewardWallet;
+  dto.wallet = user.wallet;
   return dto;
 };

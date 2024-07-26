@@ -24,4 +24,7 @@ export class UserResponseDto {
 
   @Expose()
   rewardWallet: number;
+
+  @Expose()
+  wallet: string;
 }

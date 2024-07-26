@@ -38,7 +38,7 @@ export class UserService {
 
   async getUserById(telegramId: string): Promise<UserResponseDto> {
     const user = await this.prismaService.user.findFirst({
-      where: { telegramId: telegramId },
+      where: { telegramId: telegramId.toString() },
       include: { ranking: true },
     });
     if (!user) {
