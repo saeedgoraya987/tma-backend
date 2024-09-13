@@ -68,7 +68,7 @@ export class TelegramService {
     });
 
     this.bot.command('quac', (ctx) => {
-      ctx.reply('Quác quác quác quác quác quác.');
+      ctx.reply('Qac qac qac qac qac 🦆.');
     });
 
     this.bot.on('message', (ctx) => {
@@ -90,16 +90,35 @@ export class TelegramService {
 
   async sendCommandToCreationDateBot(userId: number) {
     const command = `/id ${userId}`;
-    const message = await this.bot.api.sendMessage(747653812, command);
+    const message = await this.bot.api.sendMessage(userId, command);
     return message;
   }
 
+  /**
+   * Points will be calculated by the time randomly drawn from the following months multiplied by 10%.
+   *
+   * @param {Date} time
+   * @return {*}  {Promise<number>}
+   * @memberof TelegramService
+   */
   async calculationPoint(time: Date): Promise<number> {
     const currentDate = new Date();
     const monthsDifference = getMonthDifference(time, currentDate);
     return monthsDifference * 10;
   }
 
+  /**
+   * Handles the activation of a referral process.
+   * It checks if the inviter exists, starts the invitee as a user,
+   * and creates a referral if the inviter and invitee are valid.
+   *
+   * @param {string} inviterId - The ID of the user who is inviting.
+   * @param {number} inviteeId - The ID of the user who is being invited.
+   * @param {string} username - The username of the invitee.
+   * @param {string} [avatar] - The optional avatar URL of the invitee.
+   * @return {Promise<void>} - A promise that resolves after processing the referral.
+   * @memberof TelegramService
+   */
   async handleActivateReferral(
     inviterId: string,
     inviteeId: number,
@@ -124,6 +143,17 @@ export class TelegramService {
     await this.handleCreateReferral(Number(inviterId), inviteeId);
   }
 
+  /**
+   * Handles the creation of a new user in the system.
+   * It generates a random registration date, calculates the user's points,
+   * and attempts to create a new user in the database.
+   *
+   * @param {number} id - The Telegram ID of the user.
+   * @param {string} username - The Telegram username of the user.
+   * @param {string} [avatar] - The optional avatar URL of the user.
+   * @return {Promise<void>} - A promise that resolves after attempting to create the user.
+   * @memberof TelegramService
+   */
   async handleUserStart(id: number, username: string, avatar?: string) {
     const startDate = new Date(2010, 0, 1);
     const endDate = new Date(2023, 11, 31);
@@ -148,6 +178,16 @@ export class TelegramService {
         );
   }
 
+  /**
+   * Handles the creation of a referral between an inviter and an invitee.
+   * It ensures that both the inviter and invitee exist, checks if the invitee
+   * has already been referred, and creates a new referral entry if eligible.
+   *
+   * @param {number} inviterId - The ID of the user who is inviting.
+   * @param {number} inviteeId - The ID of the user who is being invited.
+   * @return {Promise<boolean>} - Returns `true` if the referral was created successfully, or `false` if it failed.
+   * @memberof TelegramService
+   */
   async handleCreateReferral(
     inviterId: number,
     inviteeId: number,

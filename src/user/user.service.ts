@@ -63,6 +63,15 @@ export class UserService {
     return users;
   }
 
+  /**
+   * Updates the user's wallet address and reward wallet, ensuring the wallet address is in non-bounceable format.
+   * Additionally, updates the ranking for all users after a successful wallet update.
+   *
+   * @param {updateWalletDto} requestDto - The data transfer object containing the Telegram ID and wallet address.
+   * @return {Promise<UserResponseDto>} - A promise that resolves with the updated user data.
+   * @throws {BadRequestException} - Throws an exception if the user with the given Telegram ID does not exist.
+   * @memberof WalletService
+   */
   async updateWallet(requestDto: updateWalletDto): Promise<UserResponseDto> {
     const { telegramId, wallet } = requestDto;
     const address = convertHexToNonBounceable(wallet);

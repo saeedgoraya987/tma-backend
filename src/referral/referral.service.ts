@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, Referal } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RankingService } from 'src/ranking/ranking.service';
-import { UserService } from 'src/user/user.service';
 import { transformReferral } from './dto/referral-mapping';
 import { ReferralDto } from './dto/referral.dto';
 
@@ -12,7 +11,6 @@ export class ReferralService {
 
   constructor(
     private prismaService: PrismaService,
-    private userService: UserService,
     private rankingService: RankingService,
   ) {}
 
@@ -37,6 +35,7 @@ export class ReferralService {
   async createReferral(data: Prisma.ReferalCreateInput) {
     const referral = await this.prismaService.referal.create({ data: data });
     await this.rankingService.updateRankingForAllUsers();
+    this.logger.log(`Referral id ${referral.id} created`);
     return referral;
   }
 }
