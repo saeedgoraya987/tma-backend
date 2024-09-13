@@ -11,6 +11,7 @@ import { getMonthDifference, getRandomDate } from 'src/utils/time';
 export class TelegramService {
   private bot: Bot;
   private tokenBot = this.configService.get<string>('BOT_TOKEN');
+  private tmaUrl = this.configService.get<string>('TMA_URL');
   private groupId: string;
   private readonly logger = new Logger(ReferralService.name);
 
@@ -54,7 +55,7 @@ export class TelegramService {
               {
                 text: 'Open Mini App',
                 web_app: {
-                  url: 'https://ducktma.netlify.app/',
+                  url: this.tmaUrl,
                 },
               },
             ],
